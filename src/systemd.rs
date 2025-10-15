@@ -10,6 +10,8 @@ use which::which;
 const SYSTEMCTL: &str = "systemctl";
 const SERVICE_FILE_PERMISSIONS: u32 = 0o644;
 
+/// Configuration for a systemd service.
+/// This struct holds all necessary information to create and manage a systemd service.
 #[derive(Debug)]
 pub struct Config {
     pub name: String,
@@ -101,17 +103,23 @@ impl Config {
     }
 }
 
+/// A service manager for systemd.
+/// This struct provides methods to install, uninstall, start, stop, restart, and check the status of a systemd service.
+#[derive(Debug)]
 pub struct Systemd {
     config: Config,
 }
 
 impl Systemd {
+    /// Checks if systemd is available on the system.
+    /// This is done by checking if the `systemctl` command is present in the system's PATH.
     pub fn is_available() -> bool {
         which(SYSTEMCTL).is_ok()
     }
 }
 
 impl Systemd {
+    /// Creates a new `Systemd` service manager with the given configuration.
     pub fn new(config: Config) -> Self {
         Self { config }
     }
@@ -149,7 +157,7 @@ impl Service for Systemd {
 
         Command::new(SYSTEMCTL)
             .arg("enable")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!("Failed to enable {}: {:?}", self.config.unit_name(), err),
@@ -168,7 +176,7 @@ impl Service for Systemd {
     fn uninstall(&self) -> Result<(), ServiceError> {
         Command::new(SYSTEMCTL)
             .arg("disable")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!("Failed to stop {}: {:?}", self.config.unit_name(), err),
@@ -184,7 +192,7 @@ impl Service for Systemd {
     fn start(&self) -> Result<(), ServiceError> {
         Command::new(SYSTEMCTL)
             .arg("start")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!("Failed to start {}: {:?}", self.config.unit_name(), err),
@@ -196,7 +204,7 @@ impl Service for Systemd {
     fn stop(&self) -> Result<(), ServiceError> {
         Command::new(SYSTEMCTL)
             .arg("stop")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!("Failed to stop {}: {:?}", self.config.unit_name(), err),
@@ -208,7 +216,7 @@ impl Service for Systemd {
     fn restart(&self) -> Result<(), ServiceError> {
         Command::new(SYSTEMCTL)
             .arg("restart")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!("Failed to restart {}: {:?}", self.config.unit_name(), err),
@@ -220,7 +228,7 @@ impl Service for Systemd {
     fn status(&self) -> Result<Status, ServiceError> {
         let output = Command::new(SYSTEMCTL)
             .arg("is-active")
-            .arg(&self.config.unit_name())
+            .arg(self.config.unit_name())
             .output()
             .map_err(|err| ServiceError {
                 message: format!(
@@ -239,7 +247,7 @@ impl Service for Systemd {
                     .arg("list-unit-files")
                     .arg("-t")
                     .arg("service")
-                    .arg(&self.config.unit_name())
+                    .arg(self.config.unit_name())
                     .output()
                     .map_err(|err| ServiceError {
                         message: format!(

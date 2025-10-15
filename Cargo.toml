@@ -1,14 +1,12 @@
 [package]
 name = "sudoservice"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 authors = ["Nikola Jokic <jokicnikola07@gmail.com>"]
 description = "Rust library interacting with service managers"
 keywords = ["service", "systemd", "systemctl"]
 repository = "https://github.com/nikola-jokic/sudoservice"
 license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-which = "6"
+which = "8"
