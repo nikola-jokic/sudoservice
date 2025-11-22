@@ -101,21 +101,47 @@ impl Systemd {
             std::fs::Permissions::from_mode(SERVICE_FILE_PERMISSIONS),
         )?;
 
-        Command::new(SYSTEMCTL)
+        match Command::new(SYSTEMCTL)
             .arg("enable")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to enable service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
-        Command::new(SYSTEMCTL).arg("daemon-reload").output()?;
+        match Command::new(SYSTEMCTL).arg("daemon-reload").output()? {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to reload systemd daemon: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
         Ok(())
     }
 
     pub fn uninstall(&self) -> Result<()> {
-        Command::new(SYSTEMCTL)
+        match Command::new(SYSTEMCTL)
             .arg("disable")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to disable service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
         fs::remove_file(self.config_path())?;
 
@@ -123,55 +149,96 @@ impl Systemd {
     }
 
     pub fn start(&self) -> Result<()> {
-        Command::new(SYSTEMCTL)
+        match Command::new(SYSTEMCTL)
             .arg("start")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to start service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
         Ok(())
     }
 
     pub fn stop(&self) -> Result<()> {
-        Command::new(SYSTEMCTL)
+        match Command::new(SYSTEMCTL)
             .arg("stop")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to stop service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
         Ok(())
     }
 
     pub fn restart(&self) -> Result<()> {
-        Command::new(SYSTEMCTL)
+        match Command::new(SYSTEMCTL)
             .arg("restart")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {}
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to restart service: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        }
 
         Ok(())
     }
 
     pub fn status(&self) -> Result<Status> {
-        let output = Command::new(SYSTEMCTL)
+        let status = match Command::new(SYSTEMCTL)
             .arg("is-active")
             .arg(self.config.unit_name())
-            .output()?;
+            .output()?
+        {
+            output if output.status.success() => {
+                String::from_utf8_lossy(&output.stdout).trim().to_string()
+            }
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to get service status: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        };
 
-        let status = String::from_utf8(output.stdout).unwrap();
-
-        match status.trim() {
+        match status.as_str() {
             "active" => Ok(Status::Running),
             "inactive" => {
-                let output = Command::new(SYSTEMCTL)
+                let status = match Command::new(SYSTEMCTL)
                     .arg("list-unit-files")
                     .arg("-t")
                     .arg("service")
                     .arg(self.config.unit_name())
-                    .output()?;
-
-                if !output.status.success() {
-                    todo!()
-                }
-
-                let status = String::from_utf8(output.stdout).unwrap();
+                    .output()?
+                {
+                    output if output.status.success() => {
+                        String::from_utf8_lossy(&output.stdout).to_string()
+                    }
+                    output => {
+                        return Err(Error::CommandError(format!(
+                            "Failed to list unit files: {}",
+                            String::from_utf8_lossy(&output.stderr)
+                        )));
+                    }
+                };
 
                 if status.contains(&self.config.unit_name()) {
                     Ok(Status::Stopped)

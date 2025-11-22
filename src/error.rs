@@ -6,6 +6,7 @@ pub enum Error {
     IoError(#[from] io::Error),
     FmtError(#[from] fmt::Error),
     ValidationError(String),
+    CommandError(String),
 }
 
 impl fmt::Display for Error {
@@ -14,6 +15,7 @@ impl fmt::Display for Error {
             Error::IoError(e) => write!(f, "I/O Error: {}", e),
             Error::FmtError(e) => write!(f, "Formatting Error: {}", e),
             Error::ValidationError(msg) => write!(f, "Validation Error: {}", msg),
+            Error::CommandError(msg) => write!(f, "Command Error: {}", msg),
         }
     }
 }

@@ -185,11 +185,11 @@ impl fmt::Display for Service {
         write_option!(buf, self.exit_type, "ExitType");
         write_bool!(buf, self.remain_after_exit, "RemainAfterExit");
         write_bool!(buf, self.guess_main_pid, "GuessMainPID");
-        
+
         if let Some(ref path) = self.pid_file {
             writeln!(buf, "PIDFile={}", path.display())?;
         }
-        
+
         write_option!(buf, self.bus_name, "BusName");
 
         // Execution commands (one per line for multi-value options)
@@ -204,46 +204,74 @@ impl fmt::Display for Service {
         // Restart configuration
         write_option!(buf, self.restart, "Restart");
         write_option!(buf, self.restart_mode, "RestartMode");
-        
+
         if let Some(sec) = self.restart_sec {
             writeln!(buf, "RestartSec={}", sec)?;
         }
         if let Some(steps) = self.restart_steps {
             writeln!(buf, "RestartSteps={}", steps)?;
         }
-        
+
         write_option!(buf, self.restart_max_delay_sec, "RestartMaxDelaySec");
         write_vec!(buf, self.success_exit_status, "SuccessExitStatus");
-        write_vec!(buf, self.restart_prevent_exit_status, "RestartPreventExitStatus");
-        write_vec!(buf, self.restart_force_exit_status, "RestartForceExitStatus");
+        write_vec!(
+            buf,
+            self.restart_prevent_exit_status,
+            "RestartPreventExitStatus"
+        );
+        write_vec!(
+            buf,
+            self.restart_force_exit_status,
+            "RestartForceExitStatus"
+        );
 
         // Timeouts
         write_option!(buf, self.timeout_start_sec, "TimeoutStartSec");
         write_option!(buf, self.timeout_stop_sec, "TimeoutStopSec");
         write_option!(buf, self.timeout_abort_sec, "TimeoutAbortSec");
         write_option!(buf, self.timeout_sec, "TimeoutSec");
-        write_option!(buf, self.timeout_start_failure_mode, "TimeoutStartFailureMode");
-        write_option!(buf, self.timeout_stop_failure_mode, "TimeoutStopFailureMode");
+        write_option!(
+            buf,
+            self.timeout_start_failure_mode,
+            "TimeoutStartFailureMode"
+        );
+        write_option!(
+            buf,
+            self.timeout_stop_failure_mode,
+            "TimeoutStopFailureMode"
+        );
 
         // Runtime limits
         write_option!(buf, self.runtime_max_sec, "RuntimeMaxSec");
-        write_option!(buf, self.runtime_randomized_extra_sec, "RuntimeRandomizedExtraSec");
+        write_option!(
+            buf,
+            self.runtime_randomized_extra_sec,
+            "RuntimeRandomizedExtraSec"
+        );
         write_option!(buf, self.watchdog_sec, "WatchdogSec");
 
         // Execution environment
-        write_bool!(buf, self.root_directory_start_only, "RootDirectoryStartOnly");
+        write_bool!(
+            buf,
+            self.root_directory_start_only,
+            "RootDirectoryStartOnly"
+        );
         write_bool!(buf, self.non_blocking, "NonBlocking");
         write_option!(buf, self.notify_access, "NotifyAccess");
 
         // Socket and file descriptor management
         write_vec!(buf, self.sockets, "Sockets");
-        
+
         if let Some(max) = self.file_descriptor_store_max {
             writeln!(buf, "FileDescriptorStoreMax={}", max)?;
         }
-        
-        write_option!(buf, self.file_descriptor_store_preserve, "FileDescriptorStorePreserve");
-        
+
+        write_option!(
+            buf,
+            self.file_descriptor_store_preserve,
+            "FileDescriptorStorePreserve"
+        );
+
         if let Some(ref path) = self.usb_function_descriptors {
             writeln!(buf, "USBFunctionDescriptors={}", path.display())?;
         }

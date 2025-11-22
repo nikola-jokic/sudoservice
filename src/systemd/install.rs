@@ -1,7 +1,7 @@
 use std::fmt;
 
 /// Represents the [Install] section of a systemd unit file.
-/// 
+///
 /// This section carries installation information for the unit and is used
 /// by systemctl enable/disable commands during installation of a unit.
 #[derive(Debug, Clone, Default)]

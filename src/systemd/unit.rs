@@ -489,13 +489,17 @@ impl fmt::Display for Unit {
         write_bool!(buf, self.refuse_manual_stop, "RefuseManualStop");
         write_bool!(buf, self.allow_isolate, "AllowIsolate");
         write_bool!(buf, self.default_dependencies, "DefaultDependencies");
-        write_bool!(buf, self.survive_final_kill_signal, "SurviveFinalKillSignal");
+        write_bool!(
+            buf,
+            self.survive_final_kill_signal,
+            "SurviveFinalKillSignal"
+        );
 
         // Actions & modes
         write_option!(buf, self.collect_mode, "CollectMode");
         write_option!(buf, self.failure_action, "FailureAction");
         write_option!(buf, self.success_action, "SuccessAction");
-        
+
         if let Some(status) = self.failure_action_exit_status {
             writeln!(buf, "FailureActionExitStatus={}", status)?;
         }
@@ -511,7 +515,11 @@ impl fmt::Display for Unit {
             writeln!(buf, "JobRunningTimeoutSec={}", timeout)?;
         }
         write_option!(buf, self.job_timeout_action, "JobTimeoutAction");
-        write_option!(buf, self.job_timeout_reboot_argument, "JobTimeoutRebootArgument");
+        write_option!(
+            buf,
+            self.job_timeout_reboot_argument,
+            "JobTimeoutRebootArgument"
+        );
 
         // Start rate limiting
         if let Some(interval) = self.start_limit_interval_sec {
@@ -531,9 +539,17 @@ impl fmt::Display for Unit {
         // Condition checks
         write_option!(buf, self.condition_architecture, "ConditionArchitecture");
         write_option!(buf, self.condition_firmware, "ConditionFirmware");
-        write_option!(buf, self.condition_virtualization, "ConditionVirtualization");
+        write_option!(
+            buf,
+            self.condition_virtualization,
+            "ConditionVirtualization"
+        );
         write_option!(buf, self.condition_host, "ConditionHost");
-        write_option!(buf, self.condition_kernel_command_line, "ConditionKernelCommandLine");
+        write_option!(
+            buf,
+            self.condition_kernel_command_line,
+            "ConditionKernelCommandLine"
+        );
         write_option!(buf, self.condition_kernel_version, "ConditionKernelVersion");
         write_option!(buf, self.condition_credential, "ConditionCredential");
         write_option!(buf, self.condition_environment, "ConditionEnvironment");
@@ -543,23 +559,63 @@ impl fmt::Display for Unit {
         write_option!(buf, self.condition_needs_update, "ConditionNeedsUpdate");
         write_bool!(buf, self.condition_first_boot, "ConditionFirstBoot");
         write_option!(buf, self.condition_path_exists, "ConditionPathExists");
-        write_option!(buf, self.condition_path_exists_glob, "ConditionPathExistsGlob");
-        write_option!(buf, self.condition_path_is_directory, "ConditionPathIsDirectory");
-        write_option!(buf, self.condition_path_is_symbolic_link, "ConditionPathIsSymbolicLink");
-        write_option!(buf, self.condition_path_is_mount_point, "ConditionPathIsMountPoint");
-        write_option!(buf, self.condition_path_is_read_write, "ConditionPathIsReadWrite");
-        write_option!(buf, self.condition_path_is_encrypted, "ConditionPathIsEncrypted");
-        write_option!(buf, self.condition_directory_not_empty, "ConditionDirectoryNotEmpty");
+        write_option!(
+            buf,
+            self.condition_path_exists_glob,
+            "ConditionPathExistsGlob"
+        );
+        write_option!(
+            buf,
+            self.condition_path_is_directory,
+            "ConditionPathIsDirectory"
+        );
+        write_option!(
+            buf,
+            self.condition_path_is_symbolic_link,
+            "ConditionPathIsSymbolicLink"
+        );
+        write_option!(
+            buf,
+            self.condition_path_is_mount_point,
+            "ConditionPathIsMountPoint"
+        );
+        write_option!(
+            buf,
+            self.condition_path_is_read_write,
+            "ConditionPathIsReadWrite"
+        );
+        write_option!(
+            buf,
+            self.condition_path_is_encrypted,
+            "ConditionPathIsEncrypted"
+        );
+        write_option!(
+            buf,
+            self.condition_directory_not_empty,
+            "ConditionDirectoryNotEmpty"
+        );
         write_option!(buf, self.condition_file_not_empty, "ConditionFileNotEmpty");
-        write_option!(buf, self.condition_file_is_executable, "ConditionFileIsExecutable");
+        write_option!(
+            buf,
+            self.condition_file_is_executable,
+            "ConditionFileIsExecutable"
+        );
         write_option!(buf, self.condition_user, "ConditionUser");
         write_option!(buf, self.condition_group, "ConditionGroup");
-        write_vec!(buf, self.condition_control_group_controller, "ConditionControlGroupController");
+        write_vec!(
+            buf,
+            self.condition_control_group_controller,
+            "ConditionControlGroupController"
+        );
         write_option!(buf, self.condition_memory, "ConditionMemory");
         write_option!(buf, self.condition_cpus, "ConditionCPUs");
         write_vec!(buf, self.condition_cpu_feature, "ConditionCPUFeature");
         write_option!(buf, self.condition_os_release, "ConditionOSRelease");
-        write_option!(buf, self.condition_memory_pressure, "ConditionMemoryPressure");
+        write_option!(
+            buf,
+            self.condition_memory_pressure,
+            "ConditionMemoryPressure"
+        );
         write_option!(buf, self.condition_cpu_pressure, "ConditionCPUPressure");
         write_option!(buf, self.condition_io_pressure, "ConditionIOPressure");
 
@@ -568,7 +624,11 @@ impl fmt::Display for Unit {
         write_option!(buf, self.assert_firmware, "AssertFirmware");
         write_option!(buf, self.assert_virtualization, "AssertVirtualization");
         write_option!(buf, self.assert_host, "AssertHost");
-        write_option!(buf, self.assert_kernel_command_line, "AssertKernelCommandLine");
+        write_option!(
+            buf,
+            self.assert_kernel_command_line,
+            "AssertKernelCommandLine"
+        );
         write_option!(buf, self.assert_kernel_version, "AssertKernelVersion");
         write_option!(buf, self.assert_credential, "AssertCredential");
         write_option!(buf, self.assert_environment, "AssertEnvironment");
@@ -580,16 +640,36 @@ impl fmt::Display for Unit {
         write_option!(buf, self.assert_path_exists, "AssertPathExists");
         write_option!(buf, self.assert_path_exists_glob, "AssertPathExistsGlob");
         write_option!(buf, self.assert_path_is_directory, "AssertPathIsDirectory");
-        write_option!(buf, self.assert_path_is_symbolic_link, "AssertPathIsSymbolicLink");
-        write_option!(buf, self.assert_path_is_mount_point, "AssertPathIsMountPoint");
+        write_option!(
+            buf,
+            self.assert_path_is_symbolic_link,
+            "AssertPathIsSymbolicLink"
+        );
+        write_option!(
+            buf,
+            self.assert_path_is_mount_point,
+            "AssertPathIsMountPoint"
+        );
         write_option!(buf, self.assert_path_is_read_write, "AssertPathIsReadWrite");
         write_option!(buf, self.assert_path_is_encrypted, "AssertPathIsEncrypted");
-        write_option!(buf, self.assert_directory_not_empty, "AssertDirectoryNotEmpty");
+        write_option!(
+            buf,
+            self.assert_directory_not_empty,
+            "AssertDirectoryNotEmpty"
+        );
         write_option!(buf, self.assert_file_not_empty, "AssertFileNotEmpty");
-        write_option!(buf, self.assert_file_is_executable, "AssertFileIsExecutable");
+        write_option!(
+            buf,
+            self.assert_file_is_executable,
+            "AssertFileIsExecutable"
+        );
         write_option!(buf, self.assert_user, "AssertUser");
         write_option!(buf, self.assert_group, "AssertGroup");
-        write_vec!(buf, self.assert_control_group_controller, "AssertControlGroupController");
+        write_vec!(
+            buf,
+            self.assert_control_group_controller,
+            "AssertControlGroupController"
+        );
         write_option!(buf, self.assert_memory, "AssertMemory");
         write_option!(buf, self.assert_cpus, "AssertCPUs");
         write_vec!(buf, self.assert_cpu_feature, "AssertCPUFeature");
