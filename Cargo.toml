@@ -10,3 +10,7 @@ license = "MIT"
 
 [dependencies]
 which = "8"
+thiserror = "1"
+
+[features]
+systemd = []
