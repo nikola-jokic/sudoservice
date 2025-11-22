@@ -1,3 +1,4 @@
-pub mod service;
-#[cfg(target_os = "linux")]
+pub mod error;
+pub use error::Error;
+#[cfg(feature = "systemd")]
 pub mod systemd;
