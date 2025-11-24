@@ -289,3 +289,73 @@ impl fmt::Display for Service {
         Ok(())
     }
 }
+
+impl Service {
+    /// Validate the service configuration according to systemd specifications
+    pub fn validate(&self) -> Result<(), String> {
+        // Service type
+        const SERVICE_TYPES: &[&str] = &["simple", "exec", "forking", "oneshot", "dbus", "notify", "notify-reload", "idle"];
+        if let Some(ref typ) = self.service_type {
+            if !SERVICE_TYPES.contains(&typ.as_str()) {
+                return Err(format!("Invalid Type '{}': must be one of {:?}", typ, SERVICE_TYPES));
+            }
+        }
+
+        // Exit type
+        const EXIT_TYPES: &[&str] = &["main", "cgroup"];
+        if let Some(ref typ) = self.exit_type {
+            if !EXIT_TYPES.contains(&typ.as_str()) {
+                return Err(format!("Invalid ExitType '{}': must be one of {:?}", typ, EXIT_TYPES));
+            }
+        }
+
+        // Restart
+        const RESTART_TYPES: &[&str] = &["no", "on-success", "on-failure", "on-abnormal", "on-watchdog", "on-abort", "always"];
+        if let Some(ref restart) = self.restart {
+            if !RESTART_TYPES.contains(&restart.as_str()) {
+                return Err(format!("Invalid Restart '{}': must be one of {:?}", restart, RESTART_TYPES));
+            }
+        }
+
+        // TimeoutSec is u64, no validation needed
+
+        // Restart mode
+        const RESTART_MODES: &[&str] = &["normal", "direct", "debug"];
+        if let Some(ref mode) = self.restart_mode {
+            if !RESTART_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid RestartMode '{}': must be one of {:?}", mode, RESTART_MODES));
+            }
+        }
+
+        // Notify access
+        const NOTIFY_ACCESS: &[&str] = &["none", "main", "exec", "all"];
+        if let Some(ref access) = self.notify_access {
+            if !NOTIFY_ACCESS.contains(&access.as_str()) {
+                return Err(format!("Invalid NotifyAccess '{}': must be one of {:?}", access, NOTIFY_ACCESS));
+            }
+        }
+
+        // Timeout failure modes
+        const TIMEOUT_FAILURE_MODES: &[&str] = &["terminate", "abort", "kill"];
+        if let Some(ref mode) = self.timeout_start_failure_mode {
+            if !TIMEOUT_FAILURE_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid TimeoutStartFailureMode '{}': must be one of {:?}", mode, TIMEOUT_FAILURE_MODES));
+            }
+        }
+        if let Some(ref mode) = self.timeout_stop_failure_mode {
+            if !TIMEOUT_FAILURE_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid TimeoutStopFailureMode '{}': must be one of {:?}", mode, TIMEOUT_FAILURE_MODES));
+            }
+        }
+
+        // OOM policy
+        const OOM_POLICIES: &[&str] = &["continue", "stop", "kill"];
+        if let Some(ref policy) = self.oom_policy {
+            if !OOM_POLICIES.contains(&policy.as_str()) {
+                return Err(format!("Invalid OOMPolicy '{}': must be one of {:?}", policy, OOM_POLICIES));
+            }
+        }
+
+        Ok(())
+    }
+}

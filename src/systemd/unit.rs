@@ -681,3 +681,134 @@ impl fmt::Display for Unit {
         Ok(())
     }
 }
+
+impl Unit {
+    /// Validate the unit configuration according to systemd specifications
+    pub fn validate(&self) -> Result<(), String> {
+        // Documentation URIs must be of allowed types
+        if let Some(ref docs) = self.documentation {
+            for doc in docs {
+                if !doc.starts_with("http://") 
+                    && !doc.starts_with("https://") 
+                    && !doc.starts_with("file:") 
+                    && !doc.starts_with("info:") 
+                    && !doc.starts_with("man:") {
+                    return Err(format!("Invalid documentation URI '{}': must start with http://, https://, file:, info:, or man:", doc));
+                }
+            }
+        }
+
+        // Job modes
+        const JOB_MODES: &[&str] = &["fail", "replace", "replace-irreversibly", "isolate", "flush", "ignore-dependencies", "ignore-requirements"];
+        if let Some(ref mode) = self.on_success_job_mode {
+            if !JOB_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid OnSuccessJobMode '{}': must be one of {:?}", mode, JOB_MODES));
+            }
+        }
+        if let Some(ref mode) = self.on_failure_job_mode {
+            if !JOB_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid OnFailureJobMode '{}': must be one of {:?}", mode, JOB_MODES));
+            }
+        }
+
+        // Collect mode
+        const COLLECT_MODES: &[&str] = &["inactive", "inactive-or-failed"];
+        if let Some(ref mode) = self.collect_mode {
+            if !COLLECT_MODES.contains(&mode.as_str()) {
+                return Err(format!("Invalid CollectMode '{}': must be one of {:?}", mode, COLLECT_MODES));
+            }
+        }
+
+        // Failure/Success actions
+        const ACTIONS: &[&str] = &["none", "reboot", "reboot-force", "reboot-immediate", "poweroff", "poweroff-force", "poweroff-immediate", "exit", "exit-force", "soft-reboot", "soft-reboot-force", "kexec", "kexec-force", "halt", "halt-force", "halt-immediate"];
+        if let Some(ref action) = self.failure_action {
+            if !ACTIONS.contains(&action.as_str()) {
+                return Err(format!("Invalid FailureAction '{}': must be one of {:?}", action, ACTIONS));
+            }
+        }
+        if let Some(ref action) = self.success_action {
+            if !ACTIONS.contains(&action.as_str()) {
+                return Err(format!("Invalid SuccessAction '{}': must be one of {:?}", action, ACTIONS));
+            }
+        }
+
+        // Job timeout action
+        if let Some(ref action) = self.job_timeout_action {
+            if !ACTIONS.contains(&action.as_str()) {
+                return Err(format!("Invalid JobTimeoutAction '{}': must be one of {:?}", action, ACTIONS));
+            }
+        }
+
+        // Start limit action
+        if let Some(ref action) = self.start_limit_action {
+            if !ACTIONS.contains(&action.as_str()) {
+                return Err(format!("Invalid StartLimitAction '{}': must be one of {:?}", action, ACTIONS));
+            }
+        }
+
+        // Condition architectures
+        const ARCHITECTURES: &[&str] = &["x86", "x86-64", "ppc", "ppc-le", "ppc64", "ppc64-le", "ia64", "parisc", "parisc64", "s390", "s390x", "sparc", "sparc64", "mips", "mips-le", "mips64", "mips64-le", "alpha", "arm", "arm-be", "arm64", "arm64-be", "sh", "sh64", "m68k", "tilegx", "cris", "arc", "arc-be", "native"];
+        if let Some(ref arch) = self.condition_architecture {
+            if !ARCHITECTURES.contains(&arch.as_str()) {
+                return Err(format!("Invalid ConditionArchitecture '{}': must be one of {:?}", arch, ARCHITECTURES));
+            }
+        }
+        if let Some(ref arch) = self.assert_architecture {
+            if !ARCHITECTURES.contains(&arch.as_str()) {
+                return Err(format!("Invalid AssertArchitecture '{}': must be one of {:?}", arch, ARCHITECTURES));
+            }
+        }
+
+        // Condition firmware
+        // This is more complex, but for now skip detailed validation
+
+        // Condition virtualization
+        const VIRTUALIZATIONS: &[&str] = &["vm", "container", "qemu", "kvm", "amazon", "zvm", "vmware", "microsoft", "oracle", "powervm", "xen", "bochs", "uml", "bhyve", "qnx", "apple", "sre", "openvz", "lxc", "lxc-libvirt", "systemd-nspawn", "docker", "podman", "rkt", "wsl", "proot", "pouch", "acrn", "private-users"];
+        if let Some(ref virt) = self.condition_virtualization {
+            if !VIRTUALIZATIONS.contains(&virt.as_str()) {
+                return Err(format!("Invalid ConditionVirtualization '{}': must be one of {:?}", virt, VIRTUALIZATIONS));
+            }
+        }
+        if let Some(ref virt) = self.assert_virtualization {
+            if !VIRTUALIZATIONS.contains(&virt.as_str()) {
+                return Err(format!("Invalid AssertVirtualization '{}': must be one of {:?}", virt, VIRTUALIZATIONS));
+            }
+        }
+
+        // Condition security
+        const SECURITY_TECHS: &[&str] = &["selinux", "apparmor", "tomoyo", "smack", "ima", "audit", "uefi-secureboot", "tpm2", "cvm", "measured-uki"];
+        if let Some(ref secs) = self.condition_security {
+            for sec in secs {
+                if !SECURITY_TECHS.contains(&sec.as_str()) {
+                    return Err(format!("Invalid ConditionSecurity '{}': must be one of {:?}", sec, SECURITY_TECHS));
+                }
+            }
+        }
+        if let Some(ref secs) = self.assert_security {
+            for sec in secs {
+                if !SECURITY_TECHS.contains(&sec.as_str()) {
+                    return Err(format!("Invalid AssertSecurity '{}': must be one of {:?}", sec, SECURITY_TECHS));
+                }
+            }
+        }
+
+        // Condition capabilities - these are like CAP_MKNOD, but validating all would be extensive
+        // For now, just check they start with CAP_
+        if let Some(ref caps) = self.condition_capability {
+            for cap in caps {
+                if !cap.starts_with("CAP_") {
+                    return Err(format!("Invalid ConditionCapability '{}': must start with CAP_", cap));
+                }
+            }
+        }
+        if let Some(ref caps) = self.assert_capability {
+            for cap in caps {
+                if !cap.starts_with("CAP_") {
+                    return Err(format!("Invalid AssertCapability '{}': must start with CAP_", cap));
+                }
+            }
+        }
+
+        Ok(())
+    }
+}

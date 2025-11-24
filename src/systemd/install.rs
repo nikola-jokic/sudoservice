@@ -40,3 +40,20 @@ impl fmt::Display for Install {
         Ok(())
     }
 }
+
+impl Install {
+    /// Validate the install configuration according to systemd specifications
+    pub fn validate(&self) -> Result<(), String> {
+        // DefaultInstance should be a valid instance identifier
+        if let Some(ref instance) = self.default_instance {
+            if instance.is_empty() {
+                return Err("Invalid DefaultInstance: cannot be empty".to_string());
+            }
+            if !instance.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '-') {
+                return Err(format!("Invalid DefaultInstance '{}': must contain only alphanumeric characters, underscores, and hyphens", instance));
+            }
+        }
+
+        Ok(())
+    }
+}

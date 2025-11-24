@@ -26,10 +26,10 @@ type Result<T> = std::result::Result<T, Error>;
 /// This struct holds all necessary information to create and manage a systemd service.
 #[derive(Debug)]
 pub struct Config {
+    pub name: String,
     pub unit: Unit,
     pub service: Service,
     pub install: Install,
-    pub name: String,
 }
 
 impl fmt::Display for Config {
