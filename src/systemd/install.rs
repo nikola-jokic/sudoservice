@@ -40,3 +40,57 @@ impl fmt::Display for Install {
         Ok(())
     }
 }
+
+impl Install {
+    /// Validate the install configuration according to systemd specifications
+    pub fn validate(&self) -> Result<(), String> {
+        // DefaultInstance should be a valid instance identifier
+        if let Some(ref instance) = self.default_instance {
+            if instance.is_empty() {
+                return Err("Invalid DefaultInstance: cannot be empty".to_string());
+            }
+            if !instance
+                .chars()
+                .all(|c| c.is_alphanumeric() || c == '_' || c == '-')
+            {
+                return Err(format!(
+                    "Invalid DefaultInstance '{}': must contain only alphanumeric characters, underscores, and hyphens",
+                    instance
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    // Builder pattern setters
+    pub fn alias(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.alias = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn wanted_by(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.wanted_by = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn required_by(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.required_by = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn upheld_by(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.upheld_by = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn also(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.also = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn default_instance(mut self, value: impl Into<String>) -> Self {
+        self.default_instance = Some(value.into());
+        self
+    }
+}

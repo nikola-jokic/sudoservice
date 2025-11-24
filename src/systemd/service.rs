@@ -1,6 +1,180 @@
 use std::fmt;
 use std::path::PathBuf;
 
+/// Service type for systemd services
+#[derive(Debug, Clone, Copy)]
+pub enum ServiceType {
+    /// Simple service
+    Simple,
+    /// Exec service
+    Exec,
+    /// Forking service
+    Forking,
+    /// Oneshot service
+    Oneshot,
+    /// D-Bus service
+    Dbus,
+    /// Notify service
+    Notify,
+    /// Notify reload service
+    NotifyReload,
+    /// Idle service
+    Idle,
+}
+
+impl fmt::Display for ServiceType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ServiceType::Simple => write!(f, "simple"),
+            ServiceType::Exec => write!(f, "exec"),
+            ServiceType::Forking => write!(f, "forking"),
+            ServiceType::Oneshot => write!(f, "oneshot"),
+            ServiceType::Dbus => write!(f, "dbus"),
+            ServiceType::Notify => write!(f, "notify"),
+            ServiceType::NotifyReload => write!(f, "notify-reload"),
+            ServiceType::Idle => write!(f, "idle"),
+        }
+    }
+}
+
+/// Exit type for services
+#[derive(Debug, Clone, Copy)]
+pub enum ExitType {
+    /// Main process
+    Main,
+    /// Control group
+    Cgroup,
+}
+
+impl fmt::Display for ExitType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ExitType::Main => write!(f, "main"),
+            ExitType::Cgroup => write!(f, "cgroup"),
+        }
+    }
+}
+
+/// Restart type for services
+#[derive(Debug, Clone, Copy)]
+pub enum RestartType {
+    /// No restart
+    No,
+    /// Restart on success
+    OnSuccess,
+    /// Restart on failure
+    OnFailure,
+    /// Restart on abnormal exit
+    OnAbnormal,
+    /// Restart on watchdog timeout
+    OnWatchdog,
+    /// Restart on abort
+    OnAbort,
+    /// Always restart
+    Always,
+}
+
+impl fmt::Display for RestartType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RestartType::No => write!(f, "no"),
+            RestartType::OnSuccess => write!(f, "on-success"),
+            RestartType::OnFailure => write!(f, "on-failure"),
+            RestartType::OnAbnormal => write!(f, "on-abnormal"),
+            RestartType::OnWatchdog => write!(f, "on-watchdog"),
+            RestartType::OnAbort => write!(f, "on-abort"),
+            RestartType::Always => write!(f, "always"),
+        }
+    }
+}
+
+/// Restart mode for services
+#[derive(Debug, Clone, Copy)]
+pub enum RestartMode {
+    /// Normal restart
+    Normal,
+    /// Direct restart
+    Direct,
+    /// Debug restart
+    Debug,
+}
+
+impl fmt::Display for RestartMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RestartMode::Normal => write!(f, "normal"),
+            RestartMode::Direct => write!(f, "direct"),
+            RestartMode::Debug => write!(f, "debug"),
+        }
+    }
+}
+
+/// Notify access for services
+#[derive(Debug, Clone, Copy)]
+pub enum NotifyAccess {
+    /// No access
+    None,
+    /// Main process access
+    Main,
+    /// Exec access
+    Exec,
+    /// All access
+    All,
+}
+
+impl fmt::Display for NotifyAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            NotifyAccess::None => write!(f, "none"),
+            NotifyAccess::Main => write!(f, "main"),
+            NotifyAccess::Exec => write!(f, "exec"),
+            NotifyAccess::All => write!(f, "all"),
+        }
+    }
+}
+
+/// Timeout failure mode for services
+#[derive(Debug, Clone, Copy)]
+pub enum TimeoutFailureMode {
+    /// Terminate
+    Terminate,
+    /// Abort
+    Abort,
+    /// Kill
+    Kill,
+}
+
+impl fmt::Display for TimeoutFailureMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TimeoutFailureMode::Terminate => write!(f, "terminate"),
+            TimeoutFailureMode::Abort => write!(f, "abort"),
+            TimeoutFailureMode::Kill => write!(f, "kill"),
+        }
+    }
+}
+
+/// OOM policy for services
+#[derive(Debug, Clone, Copy)]
+pub enum OomPolicy {
+    /// Continue
+    Continue,
+    /// Stop
+    Stop,
+    /// Kill
+    Kill,
+}
+
+impl fmt::Display for OomPolicy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            OomPolicy::Continue => write!(f, "continue"),
+            OomPolicy::Stop => write!(f, "stop"),
+            OomPolicy::Kill => write!(f, "kill"),
+        }
+    }
+}
+
 /// Service section options
 /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Options
 #[derive(Debug, Clone, Default)]
@@ -8,12 +182,12 @@ pub struct Service {
     /// Configures the mechanism via which the service notifies the manager that the service start-up has finished.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Type=
     /// One of: simple, exec, forking, oneshot, dbus, notify, notify-reload, or idle
-    pub service_type: Option<String>,
+    pub service_type: Option<ServiceType>,
 
     /// Specifies when the manager should consider the service to be finished.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#ExitType=
     /// One of: main or cgroup
-    pub exit_type: Option<String>,
+    pub exit_type: Option<ExitType>,
 
     /// Whether the service shall be considered active even when all its processes exited.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#RemainAfterExit=
@@ -89,11 +263,11 @@ pub struct Service {
 
     /// Action taken when start timeout is hit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#TimeoutStartFailureMode=
-    pub timeout_start_failure_mode: Option<String>,
+    pub timeout_start_failure_mode: Option<TimeoutFailureMode>,
 
     /// Action taken when stop timeout is hit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#TimeoutStopFailureMode=
-    pub timeout_stop_failure_mode: Option<String>,
+    pub timeout_stop_failure_mode: Option<TimeoutFailureMode>,
 
     /// Maximum time for the service to run.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#RuntimeMaxSec=
@@ -110,12 +284,12 @@ pub struct Service {
     /// Whether the service shall be restarted when the service process exits.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Restart=
     /// One of: no, on-success, on-failure, on-abnormal, on-watchdog, on-abort, or always
-    pub restart: Option<String>,
+    pub restart: Option<RestartType>,
 
     /// How a service should restart.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#RestartMode=
     /// One of: normal, direct, or debug
-    pub restart_mode: Option<String>,
+    pub restart_mode: Option<RestartMode>,
 
     /// Exit statuses considered successful termination.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#SuccessExitStatus=
@@ -140,7 +314,7 @@ pub struct Service {
     /// Controls access to the service status notification socket.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#NotifyAccess=
     /// One of: none, main, exec, or all
-    pub notify_access: Option<String>,
+    pub notify_access: Option<NotifyAccess>,
 
     /// Names of socket units this service shall inherit socket file descriptors from.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#Sockets=
@@ -166,7 +340,7 @@ pub struct Service {
     /// Out-of-memory killing policy.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#OOMPolicy=
     /// One of: continue, stop, or kill
-    pub oom_policy: Option<String>,
+    pub oom_policy: Option<OomPolicy>,
 
     /// Files or sockets to open and pass to the service.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#OpenFile=
@@ -287,5 +461,219 @@ impl fmt::Display for Service {
         write_option!(buf, self.reload_signal, "ReloadSignal");
 
         Ok(())
+    }
+}
+
+impl Service {
+    /// Validate the service configuration according to systemd specifications
+    pub fn validate(&self) -> Result<(), String> {
+        // All validations are now compile-time enforced via enum types
+        Ok(())
+    }
+
+    // Builder pattern setters
+    pub fn service_type(mut self, value: ServiceType) -> Self {
+        self.service_type = Some(value);
+        self
+    }
+
+    pub fn exit_type(mut self, value: ExitType) -> Self {
+        self.exit_type = Some(value);
+        self
+    }
+
+    pub fn remain_after_exit(mut self, value: bool) -> Self {
+        self.remain_after_exit = Some(value);
+        self
+    }
+
+    pub fn guess_main_pid(mut self, value: bool) -> Self {
+        self.guess_main_pid = Some(value);
+        self
+    }
+
+    pub fn pid_file(mut self, value: PathBuf) -> Self {
+        self.pid_file = Some(value);
+        self
+    }
+
+    pub fn bus_name(mut self, value: impl Into<String>) -> Self {
+        self.bus_name = Some(value.into());
+        self
+    }
+
+    pub fn exec_start(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_start = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_start_pre(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_start_pre = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_start_post(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_start_post = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_condition(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_condition = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_reload(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_reload = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_stop(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_stop = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn exec_stop_post(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.exec_stop_post = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn restart_sec(mut self, value: u64) -> Self {
+        self.restart_sec = Some(value);
+        self
+    }
+
+    pub fn restart_steps(mut self, value: u32) -> Self {
+        self.restart_steps = Some(value);
+        self
+    }
+
+    pub fn restart_max_delay_sec(mut self, value: impl Into<String>) -> Self {
+        self.restart_max_delay_sec = Some(value.into());
+        self
+    }
+
+    pub fn timeout_start_sec(mut self, value: impl Into<String>) -> Self {
+        self.timeout_start_sec = Some(value.into());
+        self
+    }
+
+    pub fn timeout_stop_sec(mut self, value: impl Into<String>) -> Self {
+        self.timeout_stop_sec = Some(value.into());
+        self
+    }
+
+    pub fn timeout_abort_sec(mut self, value: impl Into<String>) -> Self {
+        self.timeout_abort_sec = Some(value.into());
+        self
+    }
+
+    pub fn timeout_sec(mut self, value: impl Into<String>) -> Self {
+        self.timeout_sec = Some(value.into());
+        self
+    }
+
+    pub fn timeout_start_failure_mode(mut self, value: TimeoutFailureMode) -> Self {
+        self.timeout_start_failure_mode = Some(value);
+        self
+    }
+
+    pub fn timeout_stop_failure_mode(mut self, value: TimeoutFailureMode) -> Self {
+        self.timeout_stop_failure_mode = Some(value);
+        self
+    }
+
+    pub fn runtime_max_sec(mut self, value: impl Into<String>) -> Self {
+        self.runtime_max_sec = Some(value.into());
+        self
+    }
+
+    pub fn runtime_randomized_extra_sec(mut self, value: impl Into<String>) -> Self {
+        self.runtime_randomized_extra_sec = Some(value.into());
+        self
+    }
+
+    pub fn watchdog_sec(mut self, value: impl Into<String>) -> Self {
+        self.watchdog_sec = Some(value.into());
+        self
+    }
+
+    pub fn restart(mut self, value: RestartType) -> Self {
+        self.restart = Some(value);
+        self
+    }
+
+    pub fn restart_mode(mut self, value: RestartMode) -> Self {
+        self.restart_mode = Some(value);
+        self
+    }
+
+    pub fn success_exit_status(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.success_exit_status = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn restart_prevent_exit_status(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.restart_prevent_exit_status = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn restart_force_exit_status(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.restart_force_exit_status = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn root_directory_start_only(mut self, value: bool) -> Self {
+        self.root_directory_start_only = Some(value);
+        self
+    }
+
+    pub fn non_blocking(mut self, value: bool) -> Self {
+        self.non_blocking = Some(value);
+        self
+    }
+
+    pub fn notify_access(mut self, value: NotifyAccess) -> Self {
+        self.notify_access = Some(value);
+        self
+    }
+
+    pub fn sockets(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.sockets = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn file_descriptor_store_max(mut self, value: u32) -> Self {
+        self.file_descriptor_store_max = Some(value);
+        self
+    }
+
+    pub fn file_descriptor_store_preserve(mut self, value: impl Into<String>) -> Self {
+        self.file_descriptor_store_preserve = Some(value.into());
+        self
+    }
+
+    pub fn usb_function_descriptors(mut self, value: PathBuf) -> Self {
+        self.usb_function_descriptors = Some(value);
+        self
+    }
+
+    pub fn usb_function_strings(mut self, value: PathBuf) -> Self {
+        self.usb_function_strings = Some(value);
+        self
+    }
+
+    pub fn oom_policy(mut self, value: OomPolicy) -> Self {
+        self.oom_policy = Some(value);
+        self
+    }
+
+    pub fn open_file(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.open_file = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn reload_signal(mut self, value: impl Into<String>) -> Self {
+        self.reload_signal = Some(value.into());
+        self
     }
 }

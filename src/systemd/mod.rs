@@ -9,9 +9,9 @@ use which::which;
 
 #[macro_use]
 mod macros;
-mod install;
-mod service;
-mod unit;
+pub mod install;
+pub mod service;
+pub mod unit;
 
 pub use install::Install;
 pub use service::Service;
@@ -26,10 +26,10 @@ type Result<T> = std::result::Result<T, Error>;
 /// This struct holds all necessary information to create and manage a systemd service.
 #[derive(Debug)]
 pub struct Config {
+    pub name: String,
     pub unit: Unit,
     pub service: Service,
     pub install: Install,
-    pub name: String,
 }
 
 impl fmt::Display for Config {
