@@ -9,9 +9,9 @@ use which::which;
 
 #[macro_use]
 mod macros;
-mod install;
-mod service;
-mod unit;
+pub mod install;
+pub mod service;
+pub mod unit;
 
 pub use install::Install;
 pub use service::Service;

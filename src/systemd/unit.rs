@@ -1,6 +1,360 @@
 use std::fmt;
 use std::path::PathBuf;
 
+/// Collect mode for unit garbage collection
+#[derive(Debug, Clone, Copy)]
+pub enum CollectMode {
+    /// Only collect inactive units
+    Inactive,
+    /// Collect inactive or failed units
+    InactiveOrFailed,
+}
+
+impl fmt::Display for CollectMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CollectMode::Inactive => write!(f, "inactive"),
+            CollectMode::InactiveOrFailed => write!(f, "inactive-or-failed"),
+        }
+    }
+}
+
+/// Job mode for OnSuccess/OnFailure units
+#[derive(Debug, Clone, Copy)]
+pub enum JobMode {
+    /// Fail the job
+    Fail,
+    /// Replace the job
+    Replace,
+    /// Replace the job irreversibly
+    ReplaceIrreversibly,
+    /// Isolate the job
+    Isolate,
+    /// Flush the job
+    Flush,
+    /// Ignore dependencies
+    IgnoreDependencies,
+    /// Ignore requirements
+    IgnoreRequirements,
+}
+
+impl fmt::Display for JobMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            JobMode::Fail => write!(f, "fail"),
+            JobMode::Replace => write!(f, "replace"),
+            JobMode::ReplaceIrreversibly => write!(f, "replace-irreversibly"),
+            JobMode::Isolate => write!(f, "isolate"),
+            JobMode::Flush => write!(f, "flush"),
+            JobMode::IgnoreDependencies => write!(f, "ignore-dependencies"),
+            JobMode::IgnoreRequirements => write!(f, "ignore-requirements"),
+        }
+    }
+}
+
+/// Action for failure/success/timeout scenarios
+#[derive(Debug, Clone, Copy)]
+pub enum Action {
+    /// No action
+    None,
+    /// Reboot the system
+    Reboot,
+    /// Force reboot the system
+    RebootForce,
+    /// Reboot the system immediately
+    RebootImmediate,
+    /// Power off the system
+    Poweroff,
+    /// Force power off the system
+    PoweroffForce,
+    /// Power off the system immediately
+    PoweroffImmediate,
+    /// Exit the service
+    Exit,
+    /// Force exit the service
+    ExitForce,
+    /// Soft reboot the system
+    SoftReboot,
+    /// Force soft reboot the system
+    SoftRebootForce,
+    /// Use kexec to reboot
+    Kexec,
+    /// Force kexec to reboot
+    KexecForce,
+    /// Halt the system
+    Halt,
+    /// Force halt the system
+    HaltForce,
+    /// Halt the system immediately
+    HaltImmediate,
+}
+
+impl fmt::Display for Action {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Action::None => write!(f, "none"),
+            Action::Reboot => write!(f, "reboot"),
+            Action::RebootForce => write!(f, "reboot-force"),
+            Action::RebootImmediate => write!(f, "reboot-immediate"),
+            Action::Poweroff => write!(f, "poweroff"),
+            Action::PoweroffForce => write!(f, "poweroff-force"),
+            Action::PoweroffImmediate => write!(f, "poweroff-immediate"),
+            Action::Exit => write!(f, "exit"),
+            Action::ExitForce => write!(f, "exit-force"),
+            Action::SoftReboot => write!(f, "soft-reboot"),
+            Action::SoftRebootForce => write!(f, "soft-reboot-force"),
+            Action::Kexec => write!(f, "kexec"),
+            Action::KexecForce => write!(f, "kexec-force"),
+            Action::Halt => write!(f, "halt"),
+            Action::HaltForce => write!(f, "halt-force"),
+            Action::HaltImmediate => write!(f, "halt-immediate"),
+        }
+    }
+}
+
+/// Security technology for condition/assert checks
+#[derive(Debug, Clone, Copy)]
+pub enum SecurityTech {
+    /// SELinux security module
+    Selinux,
+    /// AppArmor security module
+    Apparmor,
+    /// TOMOYO security module
+    Tomoyo,
+    /// SMACK security module
+    Smack,
+    /// Integrity Measurement Architecture
+    Ima,
+    /// Linux Audit subsystem
+    Audit,
+    /// UEFI Secure Boot
+    UefiSecureboot,
+    /// TPM 2.0
+    Tpm2,
+    /// Confidential Virtual Machine
+    Cvm,
+    /// Measured Unified Kernel Image
+    MeasuredUki,
+}
+
+impl fmt::Display for SecurityTech {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SecurityTech::Selinux => write!(f, "selinux"),
+            SecurityTech::Apparmor => write!(f, "apparmor"),
+            SecurityTech::Tomoyo => write!(f, "tomoyo"),
+            SecurityTech::Smack => write!(f, "smack"),
+            SecurityTech::Ima => write!(f, "ima"),
+            SecurityTech::Audit => write!(f, "audit"),
+            SecurityTech::UefiSecureboot => write!(f, "uefi-secureboot"),
+            SecurityTech::Tpm2 => write!(f, "tpm2"),
+            SecurityTech::Cvm => write!(f, "cvm"),
+            SecurityTech::MeasuredUki => write!(f, "measured-uki"),
+        }
+    }
+}
+
+/// Architecture for condition/assert checks
+#[derive(Debug, Clone, Copy)]
+pub enum Architecture {
+    /// x86 architecture
+    X86,
+    /// x86-64 architecture
+    X8664,
+    /// PowerPC architecture
+    Ppc,
+    /// PowerPC little-endian
+    PpcLe,
+    /// PowerPC 64-bit
+    Ppc64,
+    /// PowerPC 64-bit little-endian
+    Ppc64Le,
+    /// IA-64 architecture
+    Ia64,
+    /// PA-RISC architecture
+    Parisc,
+    /// PA-RISC 64-bit
+    Parisc64,
+    /// s390 architecture
+    S390,
+    /// s390x architecture
+    S390x,
+    /// SPARC architecture
+    Sparc,
+    /// SPARC 64-bit
+    Sparc64,
+    /// MIPS architecture
+    Mips,
+    /// MIPS little-endian
+    MipsLe,
+    /// MIPS 64-bit
+    Mips64,
+    /// MIPS 64-bit little-endian
+    Mips64Le,
+    /// Alpha architecture
+    Alpha,
+    /// ARM architecture
+    Arm,
+    /// ARM big-endian
+    ArmBe,
+    /// ARM 64-bit
+    Arm64,
+    /// ARM 64-bit big-endian
+    Arm64Be,
+    /// SuperH architecture
+    Sh,
+    /// SuperH 64-bit
+    Sh64,
+    /// Motorola 68000
+    M68k,
+    /// Tilera TILE-Gx
+    Tilegx,
+    /// CRIS architecture
+    Cris,
+    /// ARC architecture
+    Arc,
+    /// ARC big-endian
+    ArcBe,
+    /// Native architecture
+    Native,
+}
+
+impl fmt::Display for Architecture {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Architecture::X86 => write!(f, "x86"),
+            Architecture::X8664 => write!(f, "x86-64"),
+            Architecture::Ppc => write!(f, "ppc"),
+            Architecture::PpcLe => write!(f, "ppc-le"),
+            Architecture::Ppc64 => write!(f, "ppc64"),
+            Architecture::Ppc64Le => write!(f, "ppc64-le"),
+            Architecture::Ia64 => write!(f, "ia64"),
+            Architecture::Parisc => write!(f, "parisc"),
+            Architecture::Parisc64 => write!(f, "parisc64"),
+            Architecture::S390 => write!(f, "s390"),
+            Architecture::S390x => write!(f, "s390x"),
+            Architecture::Sparc => write!(f, "sparc"),
+            Architecture::Sparc64 => write!(f, "sparc64"),
+            Architecture::Mips => write!(f, "mips"),
+            Architecture::MipsLe => write!(f, "mips-le"),
+            Architecture::Mips64 => write!(f, "mips64"),
+            Architecture::Mips64Le => write!(f, "mips64-le"),
+            Architecture::Alpha => write!(f, "alpha"),
+            Architecture::Arm => write!(f, "arm"),
+            Architecture::ArmBe => write!(f, "arm-be"),
+            Architecture::Arm64 => write!(f, "arm64"),
+            Architecture::Arm64Be => write!(f, "arm64-be"),
+            Architecture::Sh => write!(f, "sh"),
+            Architecture::Sh64 => write!(f, "sh64"),
+            Architecture::M68k => write!(f, "m68k"),
+            Architecture::Tilegx => write!(f, "tilegx"),
+            Architecture::Cris => write!(f, "cris"),
+            Architecture::Arc => write!(f, "arc"),
+            Architecture::ArcBe => write!(f, "arc-be"),
+            Architecture::Native => write!(f, "native"),
+        }
+    }
+}
+
+/// Virtualization type for condition/assert checks
+#[derive(Debug, Clone, Copy)]
+pub enum Virtualization {
+    /// Generic virtual machine
+    Vm,
+    /// Container
+    Container,
+    /// QEMU
+    Qemu,
+    /// KVM
+    Kvm,
+    /// Amazon EC2
+    Amazon,
+    /// z/VM
+    Zvm,
+    /// VMware
+    Vmware,
+    /// Microsoft Hyper-V
+    Microsoft,
+    /// Oracle VirtualBox
+    Oracle,
+    /// IBM PowerVM
+    Powervm,
+    /// Xen
+    Xen,
+    /// Bochs
+    Bochs,
+    /// User-mode Linux
+    Uml,
+    /// bhyve
+    Bhyve,
+    /// QNX
+    Qnx,
+    /// Apple Virtualization.framework
+    Apple,
+    /// System Runtime Environment
+    Sre,
+    /// OpenVZ
+    Openvz,
+    /// LXC
+    Lxc,
+    /// LXC via libvirt
+    LxcLibvirt,
+    /// systemd-nspawn
+    SystemdNspawn,
+    /// Docker
+    Docker,
+    /// Podman
+    Podman,
+    /// rkt
+    Rkt,
+    /// Windows Subsystem for Linux
+    Wsl,
+    /// PRoot
+    Proot,
+    /// Pouch
+    Pouch,
+    /// ACRN
+    Acrn,
+    /// Private users
+    PrivateUsers,
+}
+
+impl fmt::Display for Virtualization {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Virtualization::Vm => write!(f, "vm"),
+            Virtualization::Container => write!(f, "container"),
+            Virtualization::Qemu => write!(f, "qemu"),
+            Virtualization::Kvm => write!(f, "kvm"),
+            Virtualization::Amazon => write!(f, "amazon"),
+            Virtualization::Zvm => write!(f, "zvm"),
+            Virtualization::Vmware => write!(f, "vmware"),
+            Virtualization::Microsoft => write!(f, "microsoft"),
+            Virtualization::Oracle => write!(f, "oracle"),
+            Virtualization::Powervm => write!(f, "powervm"),
+            Virtualization::Xen => write!(f, "xen"),
+            Virtualization::Bochs => write!(f, "bochs"),
+            Virtualization::Uml => write!(f, "uml"),
+            Virtualization::Bhyve => write!(f, "bhyve"),
+            Virtualization::Qnx => write!(f, "qnx"),
+            Virtualization::Apple => write!(f, "apple"),
+            Virtualization::Sre => write!(f, "sre"),
+            Virtualization::Openvz => write!(f, "openvz"),
+            Virtualization::Lxc => write!(f, "lxc"),
+            Virtualization::LxcLibvirt => write!(f, "lxc-libvirt"),
+            Virtualization::SystemdNspawn => write!(f, "systemd-nspawn"),
+            Virtualization::Docker => write!(f, "docker"),
+            Virtualization::Podman => write!(f, "podman"),
+            Virtualization::Rkt => write!(f, "rkt"),
+            Virtualization::Wsl => write!(f, "wsl"),
+            Virtualization::Proot => write!(f, "proot"),
+            Virtualization::Pouch => write!(f, "pouch"),
+            Virtualization::Acrn => write!(f, "acrn"),
+            Virtualization::PrivateUsers => write!(f, "private-users"),
+        }
+    }
+}
+
 /// Unit section options
 /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#%5BUnit%5D%20Section%20Options
 #[derive(Debug, Clone, Default)]
@@ -88,11 +442,11 @@ pub struct Unit {
 
     /// Job mode for OnSuccess=/OnFailure= units.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#OnSuccessJobMode=
-    pub on_success_job_mode: Option<String>,
+    pub on_success_job_mode: Option<JobMode>,
 
     /// Job mode for OnFailure= units.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#OnFailureJobMode=
-    pub on_failure_job_mode: Option<String>,
+    pub on_failure_job_mode: Option<JobMode>,
 
     /// If true, this unit will not be stopped when isolating another unit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#IgnoreOnIsolate=
@@ -124,15 +478,15 @@ pub struct Unit {
 
     /// Tweaks the garbage collection algorithm for this unit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#CollectMode=
-    pub collect_mode: Option<String>,
+    pub collect_mode: Option<CollectMode>,
 
     /// Action to take when the unit stops and enters a failed state.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#FailureAction=
-    pub failure_action: Option<String>,
+    pub failure_action: Option<Action>,
 
     /// Action to take when the unit enters an inactive state.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#SuccessAction=
-    pub success_action: Option<String>,
+    pub success_action: Option<Action>,
 
     /// Exit status to propagate when FailureAction= is set to exit or exit-force.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#FailureActionExitStatus=
@@ -152,7 +506,7 @@ pub struct Unit {
 
     /// Action to take when the job timeout is hit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#JobTimeoutAction=
-    pub job_timeout_action: Option<String>,
+    pub job_timeout_action: Option<Action>,
 
     /// Reboot string to pass to reboot(2) when job timeout is hit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#JobTimeoutRebootArgument=
@@ -168,7 +522,7 @@ pub struct Unit {
 
     /// Action to take if the start rate limit is hit.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#StartLimitAction=
-    pub start_limit_action: Option<String>,
+    pub start_limit_action: Option<Action>,
 
     /// Argument for the reboot(2) system call if StartLimitAction= is a reboot action.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#RebootArgument=
@@ -181,7 +535,7 @@ pub struct Unit {
     // Condition checks
     /// Check whether the system is running on a specific architecture.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionArchitecture=
-    pub condition_architecture: Option<String>,
+    pub condition_architecture: Option<Architecture>,
 
     /// Check whether the system's firmware is of a certain type.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionFirmware=
@@ -189,7 +543,7 @@ pub struct Unit {
 
     /// Check whether the system is executed in a virtualized environment.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionVirtualization=
-    pub condition_virtualization: Option<String>,
+    pub condition_virtualization: Option<Virtualization>,
 
     /// Match against hostname, machine ID, boot ID or product UUID.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionHost=
@@ -213,7 +567,7 @@ pub struct Unit {
 
     /// Check whether the given security technology is enabled.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionSecurity=
-    pub condition_security: Option<Vec<String>>,
+    pub condition_security: Option<Vec<SecurityTech>>,
 
     /// Check whether the given capability exists in the capability bounding set.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#ConditionCapability=
@@ -314,7 +668,7 @@ pub struct Unit {
     // Assert checks (similar to conditions but cause failure instead of skip)
     /// Assert that the system is running on a specific architecture.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertArchitecture=
-    pub assert_architecture: Option<String>,
+    pub assert_architecture: Option<Architecture>,
 
     /// Assert that the system's firmware is of a certain type.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertFirmware=
@@ -322,7 +676,7 @@ pub struct Unit {
 
     /// Assert that the system is executed in a virtualized environment.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertVirtualization=
-    pub assert_virtualization: Option<String>,
+    pub assert_virtualization: Option<Virtualization>,
 
     /// Assert hostname, machine ID, boot ID or product UUID.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertHost=
@@ -346,7 +700,7 @@ pub struct Unit {
 
     /// Assert that the given security technology is enabled.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertSecurity=
-    pub assert_security: Option<Vec<String>>,
+    pub assert_security: Option<Vec<SecurityTech>>,
 
     /// Assert that the given capability exists in the capability bounding set.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertCapability=
@@ -443,6 +797,13 @@ pub struct Unit {
     /// Assert that IO pressure is below or equal to a threshold.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#AssertIOPressure=
     pub assert_io_pressure: Option<String>,
+}
+
+impl Unit {
+    /// Creates a new empty `Unit` section.
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 impl fmt::Display for Unit {
@@ -688,127 +1049,593 @@ impl Unit {
         // Documentation URIs must be of allowed types
         if let Some(ref docs) = self.documentation {
             for doc in docs {
-                if !doc.starts_with("http://") 
-                    && !doc.starts_with("https://") 
-                    && !doc.starts_with("file:") 
-                    && !doc.starts_with("info:") 
-                    && !doc.starts_with("man:") {
-                    return Err(format!("Invalid documentation URI '{}': must start with http://, https://, file:, info:, or man:", doc));
+                if !doc.starts_with("http://")
+                    && !doc.starts_with("https://")
+                    && !doc.starts_with("file:")
+                    && !doc.starts_with("info:")
+                    && !doc.starts_with("man:")
+                {
+                    return Err(format!(
+                        "Invalid documentation URI '{}': must start with http://, https://, file:, info:, or man:",
+                        doc
+                    ));
                 }
-            }
-        }
-
-        // Job modes
-        const JOB_MODES: &[&str] = &["fail", "replace", "replace-irreversibly", "isolate", "flush", "ignore-dependencies", "ignore-requirements"];
-        if let Some(ref mode) = self.on_success_job_mode {
-            if !JOB_MODES.contains(&mode.as_str()) {
-                return Err(format!("Invalid OnSuccessJobMode '{}': must be one of {:?}", mode, JOB_MODES));
-            }
-        }
-        if let Some(ref mode) = self.on_failure_job_mode {
-            if !JOB_MODES.contains(&mode.as_str()) {
-                return Err(format!("Invalid OnFailureJobMode '{}': must be one of {:?}", mode, JOB_MODES));
-            }
-        }
-
-        // Collect mode
-        const COLLECT_MODES: &[&str] = &["inactive", "inactive-or-failed"];
-        if let Some(ref mode) = self.collect_mode {
-            if !COLLECT_MODES.contains(&mode.as_str()) {
-                return Err(format!("Invalid CollectMode '{}': must be one of {:?}", mode, COLLECT_MODES));
-            }
-        }
-
-        // Failure/Success actions
-        const ACTIONS: &[&str] = &["none", "reboot", "reboot-force", "reboot-immediate", "poweroff", "poweroff-force", "poweroff-immediate", "exit", "exit-force", "soft-reboot", "soft-reboot-force", "kexec", "kexec-force", "halt", "halt-force", "halt-immediate"];
-        if let Some(ref action) = self.failure_action {
-            if !ACTIONS.contains(&action.as_str()) {
-                return Err(format!("Invalid FailureAction '{}': must be one of {:?}", action, ACTIONS));
-            }
-        }
-        if let Some(ref action) = self.success_action {
-            if !ACTIONS.contains(&action.as_str()) {
-                return Err(format!("Invalid SuccessAction '{}': must be one of {:?}", action, ACTIONS));
-            }
-        }
-
-        // Job timeout action
-        if let Some(ref action) = self.job_timeout_action {
-            if !ACTIONS.contains(&action.as_str()) {
-                return Err(format!("Invalid JobTimeoutAction '{}': must be one of {:?}", action, ACTIONS));
-            }
-        }
-
-        // Start limit action
-        if let Some(ref action) = self.start_limit_action {
-            if !ACTIONS.contains(&action.as_str()) {
-                return Err(format!("Invalid StartLimitAction '{}': must be one of {:?}", action, ACTIONS));
-            }
-        }
-
-        // Condition architectures
-        const ARCHITECTURES: &[&str] = &["x86", "x86-64", "ppc", "ppc-le", "ppc64", "ppc64-le", "ia64", "parisc", "parisc64", "s390", "s390x", "sparc", "sparc64", "mips", "mips-le", "mips64", "mips64-le", "alpha", "arm", "arm-be", "arm64", "arm64-be", "sh", "sh64", "m68k", "tilegx", "cris", "arc", "arc-be", "native"];
-        if let Some(ref arch) = self.condition_architecture {
-            if !ARCHITECTURES.contains(&arch.as_str()) {
-                return Err(format!("Invalid ConditionArchitecture '{}': must be one of {:?}", arch, ARCHITECTURES));
-            }
-        }
-        if let Some(ref arch) = self.assert_architecture {
-            if !ARCHITECTURES.contains(&arch.as_str()) {
-                return Err(format!("Invalid AssertArchitecture '{}': must be one of {:?}", arch, ARCHITECTURES));
             }
         }
 
         // Condition firmware
         // This is more complex, but for now skip detailed validation
 
-        // Condition virtualization
-        const VIRTUALIZATIONS: &[&str] = &["vm", "container", "qemu", "kvm", "amazon", "zvm", "vmware", "microsoft", "oracle", "powervm", "xen", "bochs", "uml", "bhyve", "qnx", "apple", "sre", "openvz", "lxc", "lxc-libvirt", "systemd-nspawn", "docker", "podman", "rkt", "wsl", "proot", "pouch", "acrn", "private-users"];
-        if let Some(ref virt) = self.condition_virtualization {
-            if !VIRTUALIZATIONS.contains(&virt.as_str()) {
-                return Err(format!("Invalid ConditionVirtualization '{}': must be one of {:?}", virt, VIRTUALIZATIONS));
-            }
-        }
-        if let Some(ref virt) = self.assert_virtualization {
-            if !VIRTUALIZATIONS.contains(&virt.as_str()) {
-                return Err(format!("Invalid AssertVirtualization '{}': must be one of {:?}", virt, VIRTUALIZATIONS));
-            }
-        }
-
-        // Condition security
-        const SECURITY_TECHS: &[&str] = &["selinux", "apparmor", "tomoyo", "smack", "ima", "audit", "uefi-secureboot", "tpm2", "cvm", "measured-uki"];
-        if let Some(ref secs) = self.condition_security {
-            for sec in secs {
-                if !SECURITY_TECHS.contains(&sec.as_str()) {
-                    return Err(format!("Invalid ConditionSecurity '{}': must be one of {:?}", sec, SECURITY_TECHS));
-                }
-            }
-        }
-        if let Some(ref secs) = self.assert_security {
-            for sec in secs {
-                if !SECURITY_TECHS.contains(&sec.as_str()) {
-                    return Err(format!("Invalid AssertSecurity '{}': must be one of {:?}", sec, SECURITY_TECHS));
-                }
-            }
-        }
-
         // Condition capabilities - these are like CAP_MKNOD, but validating all would be extensive
         // For now, just check they start with CAP_
         if let Some(ref caps) = self.condition_capability {
             for cap in caps {
                 if !cap.starts_with("CAP_") {
-                    return Err(format!("Invalid ConditionCapability '{}': must start with CAP_", cap));
+                    return Err(format!(
+                        "Invalid ConditionCapability '{}': must start with CAP_",
+                        cap
+                    ));
                 }
             }
         }
         if let Some(ref caps) = self.assert_capability {
             for cap in caps {
                 if !cap.starts_with("CAP_") {
-                    return Err(format!("Invalid AssertCapability '{}': must start with CAP_", cap));
+                    return Err(format!(
+                        "Invalid AssertCapability '{}': must start with CAP_",
+                        cap
+                    ));
                 }
             }
         }
 
         Ok(())
+    }
+
+    // Builder pattern setters
+    pub fn description(mut self, value: impl Into<String>) -> Self {
+        self.description = Some(value.into());
+        self
+    }
+
+    pub fn documentation(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.documentation = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn wants(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.wants = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn requires(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.requires = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn requisite(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.requisite = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn binds_to(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.binds_to = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn part_of(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.part_of = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn upholds(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.upholds = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn conflicts(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.conflicts = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn before(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.before = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn after(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.after = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn on_failure(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.on_failure = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn on_success(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.on_success = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn propagates_reload_to(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.propagates_reload_to = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn reload_propagated_from(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.reload_propagated_from = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn propagates_stop_to(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.propagates_stop_to = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn stop_propagated_from(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.stop_propagated_from = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn joins_namespace_of(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.joins_namespace_of = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn requires_mounts_for(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.requires_mounts_for = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn wants_mounts_for(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.wants_mounts_for = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn on_success_job_mode(mut self, value: JobMode) -> Self {
+        self.on_success_job_mode = Some(value);
+        self
+    }
+
+    pub fn on_failure_job_mode(mut self, value: JobMode) -> Self {
+        self.on_failure_job_mode = Some(value);
+        self
+    }
+
+    pub fn ignore_on_isolate(mut self, value: bool) -> Self {
+        self.ignore_on_isolate = Some(value);
+        self
+    }
+
+    pub fn stop_when_unneeded(mut self, value: bool) -> Self {
+        self.stop_when_unneeded = Some(value);
+        self
+    }
+
+    pub fn refuse_manual_start(mut self, value: bool) -> Self {
+        self.refuse_manual_start = Some(value);
+        self
+    }
+
+    pub fn refuse_manual_stop(mut self, value: bool) -> Self {
+        self.refuse_manual_stop = Some(value);
+        self
+    }
+
+    pub fn allow_isolate(mut self, value: bool) -> Self {
+        self.allow_isolate = Some(value);
+        self
+    }
+
+    pub fn default_dependencies(mut self, value: bool) -> Self {
+        self.default_dependencies = Some(value);
+        self
+    }
+
+    pub fn survive_final_kill_signal(mut self, value: bool) -> Self {
+        self.survive_final_kill_signal = Some(value);
+        self
+    }
+
+    pub fn collect_mode(mut self, value: CollectMode) -> Self {
+        self.collect_mode = Some(value);
+        self
+    }
+
+    pub fn failure_action(mut self, value: Action) -> Self {
+        self.failure_action = Some(value);
+        self
+    }
+
+    pub fn success_action(mut self, value: Action) -> Self {
+        self.success_action = Some(value);
+        self
+    }
+
+    pub fn failure_action_exit_status(mut self, value: u8) -> Self {
+        self.failure_action_exit_status = Some(value);
+        self
+    }
+
+    pub fn success_action_exit_status(mut self, value: u8) -> Self {
+        self.success_action_exit_status = Some(value);
+        self
+    }
+
+    pub fn job_timeout_sec(mut self, value: u64) -> Self {
+        self.job_timeout_sec = Some(value);
+        self
+    }
+
+    pub fn job_running_timeout_sec(mut self, value: u64) -> Self {
+        self.job_running_timeout_sec = Some(value);
+        self
+    }
+
+    pub fn job_timeout_action(mut self, value: Action) -> Self {
+        self.job_timeout_action = Some(value);
+        self
+    }
+
+    pub fn job_timeout_reboot_argument(mut self, value: impl Into<String>) -> Self {
+        self.job_timeout_reboot_argument = Some(value.into());
+        self
+    }
+
+    pub fn start_limit_interval_sec(mut self, value: u64) -> Self {
+        self.start_limit_interval_sec = Some(value);
+        self
+    }
+
+    pub fn start_limit_burst(mut self, value: u32) -> Self {
+        self.start_limit_burst = Some(value);
+        self
+    }
+
+    pub fn start_limit_action(mut self, value: Action) -> Self {
+        self.start_limit_action = Some(value);
+        self
+    }
+
+    pub fn reboot_argument(mut self, value: impl Into<String>) -> Self {
+        self.reboot_argument = Some(value.into());
+        self
+    }
+
+    pub fn source_path(mut self, value: PathBuf) -> Self {
+        self.source_path = Some(value);
+        self
+    }
+
+    pub fn condition_architecture(mut self, value: Architecture) -> Self {
+        self.condition_architecture = Some(value);
+        self
+    }
+
+    pub fn condition_firmware(mut self, value: impl Into<String>) -> Self {
+        self.condition_firmware = Some(value.into());
+        self
+    }
+
+    pub fn condition_virtualization(mut self, value: Virtualization) -> Self {
+        self.condition_virtualization = Some(value);
+        self
+    }
+
+    pub fn condition_host(mut self, value: impl Into<String>) -> Self {
+        self.condition_host = Some(value.into());
+        self
+    }
+
+    pub fn condition_kernel_command_line(mut self, value: impl Into<String>) -> Self {
+        self.condition_kernel_command_line = Some(value.into());
+        self
+    }
+
+    pub fn condition_kernel_version(mut self, value: impl Into<String>) -> Self {
+        self.condition_kernel_version = Some(value.into());
+        self
+    }
+
+    pub fn condition_credential(mut self, value: impl Into<String>) -> Self {
+        self.condition_credential = Some(value.into());
+        self
+    }
+
+    pub fn condition_environment(mut self, value: impl Into<String>) -> Self {
+        self.condition_environment = Some(value.into());
+        self
+    }
+
+    pub fn condition_security(mut self, value: Vec<SecurityTech>) -> Self {
+        self.condition_security = Some(value);
+        self
+    }
+
+    pub fn condition_capability(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.condition_capability = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn condition_ac_power(mut self, value: bool) -> Self {
+        self.condition_ac_power = Some(value);
+        self
+    }
+
+    pub fn condition_needs_update(mut self, value: impl Into<String>) -> Self {
+        self.condition_needs_update = Some(value.into());
+        self
+    }
+
+    pub fn condition_first_boot(mut self, value: bool) -> Self {
+        self.condition_first_boot = Some(value);
+        self
+    }
+
+    pub fn condition_path_exists(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_exists = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_exists_glob(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_exists_glob = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_is_directory(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_is_directory = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_is_symbolic_link(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_is_symbolic_link = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_is_mount_point(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_is_mount_point = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_is_read_write(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_is_read_write = Some(value.into());
+        self
+    }
+
+    pub fn condition_path_is_encrypted(mut self, value: impl Into<String>) -> Self {
+        self.condition_path_is_encrypted = Some(value.into());
+        self
+    }
+
+    pub fn condition_directory_not_empty(mut self, value: impl Into<String>) -> Self {
+        self.condition_directory_not_empty = Some(value.into());
+        self
+    }
+
+    pub fn condition_file_not_empty(mut self, value: impl Into<String>) -> Self {
+        self.condition_file_not_empty = Some(value.into());
+        self
+    }
+
+    pub fn condition_file_is_executable(mut self, value: impl Into<String>) -> Self {
+        self.condition_file_is_executable = Some(value.into());
+        self
+    }
+
+    pub fn condition_user(mut self, value: impl Into<String>) -> Self {
+        self.condition_user = Some(value.into());
+        self
+    }
+
+    pub fn condition_group(mut self, value: impl Into<String>) -> Self {
+        self.condition_group = Some(value.into());
+        self
+    }
+
+    pub fn condition_control_group_controller(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.condition_control_group_controller =
+            Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn condition_memory(mut self, value: impl Into<String>) -> Self {
+        self.condition_memory = Some(value.into());
+        self
+    }
+
+    pub fn condition_cpus(mut self, value: impl Into<String>) -> Self {
+        self.condition_cpus = Some(value.into());
+        self
+    }
+
+    pub fn condition_cpu_feature(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.condition_cpu_feature = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn condition_os_release(mut self, value: impl Into<String>) -> Self {
+        self.condition_os_release = Some(value.into());
+        self
+    }
+
+    pub fn condition_memory_pressure(mut self, value: impl Into<String>) -> Self {
+        self.condition_memory_pressure = Some(value.into());
+        self
+    }
+
+    pub fn condition_cpu_pressure(mut self, value: impl Into<String>) -> Self {
+        self.condition_cpu_pressure = Some(value.into());
+        self
+    }
+
+    pub fn condition_io_pressure(mut self, value: impl Into<String>) -> Self {
+        self.condition_io_pressure = Some(value.into());
+        self
+    }
+
+    pub fn assert_architecture(mut self, value: Architecture) -> Self {
+        self.assert_architecture = Some(value);
+        self
+    }
+
+    pub fn assert_firmware(mut self, value: impl Into<String>) -> Self {
+        self.assert_firmware = Some(value.into());
+        self
+    }
+
+    pub fn assert_virtualization(mut self, value: Virtualization) -> Self {
+        self.assert_virtualization = Some(value);
+        self
+    }
+
+    pub fn assert_host(mut self, value: impl Into<String>) -> Self {
+        self.assert_host = Some(value.into());
+        self
+    }
+
+    pub fn assert_kernel_command_line(mut self, value: impl Into<String>) -> Self {
+        self.assert_kernel_command_line = Some(value.into());
+        self
+    }
+
+    pub fn assert_kernel_version(mut self, value: impl Into<String>) -> Self {
+        self.assert_kernel_version = Some(value.into());
+        self
+    }
+
+    pub fn assert_credential(mut self, value: impl Into<String>) -> Self {
+        self.assert_credential = Some(value.into());
+        self
+    }
+
+    pub fn assert_environment(mut self, value: impl Into<String>) -> Self {
+        self.assert_environment = Some(value.into());
+        self
+    }
+
+    pub fn assert_security(mut self, value: Vec<SecurityTech>) -> Self {
+        self.assert_security = Some(value);
+        self
+    }
+
+    pub fn assert_capability(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.assert_capability = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn assert_ac_power(mut self, value: bool) -> Self {
+        self.assert_ac_power = Some(value);
+        self
+    }
+
+    pub fn assert_needs_update(mut self, value: impl Into<String>) -> Self {
+        self.assert_needs_update = Some(value.into());
+        self
+    }
+
+    pub fn assert_first_boot(mut self, value: bool) -> Self {
+        self.assert_first_boot = Some(value);
+        self
+    }
+
+    pub fn assert_path_exists(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_exists = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_exists_glob(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_exists_glob = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_is_directory(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_is_directory = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_is_symbolic_link(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_is_symbolic_link = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_is_mount_point(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_is_mount_point = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_is_read_write(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_is_read_write = Some(value.into());
+        self
+    }
+
+    pub fn assert_path_is_encrypted(mut self, value: impl Into<String>) -> Self {
+        self.assert_path_is_encrypted = Some(value.into());
+        self
+    }
+
+    pub fn assert_directory_not_empty(mut self, value: impl Into<String>) -> Self {
+        self.assert_directory_not_empty = Some(value.into());
+        self
+    }
+
+    pub fn assert_file_not_empty(mut self, value: impl Into<String>) -> Self {
+        self.assert_file_not_empty = Some(value.into());
+        self
+    }
+
+    pub fn assert_file_is_executable(mut self, value: impl Into<String>) -> Self {
+        self.assert_file_is_executable = Some(value.into());
+        self
+    }
+
+    pub fn assert_user(mut self, value: impl Into<String>) -> Self {
+        self.assert_user = Some(value.into());
+        self
+    }
+
+    pub fn assert_group(mut self, value: impl Into<String>) -> Self {
+        self.assert_group = Some(value.into());
+        self
+    }
+
+    pub fn assert_control_group_controller(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.assert_control_group_controller = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn assert_memory(mut self, value: impl Into<String>) -> Self {
+        self.assert_memory = Some(value.into());
+        self
+    }
+
+    pub fn assert_cpus(mut self, value: impl Into<String>) -> Self {
+        self.assert_cpus = Some(value.into());
+        self
+    }
+
+    pub fn assert_cpu_feature(mut self, value: Vec<impl Into<String>>) -> Self {
+        self.assert_cpu_feature = Some(value.into_iter().map(|s| s.into()).collect());
+        self
+    }
+
+    pub fn assert_os_release(mut self, value: impl Into<String>) -> Self {
+        self.assert_os_release = Some(value.into());
+        self
+    }
+
+    pub fn assert_memory_pressure(mut self, value: impl Into<String>) -> Self {
+        self.assert_memory_pressure = Some(value.into());
+        self
+    }
+
+    pub fn assert_cpu_pressure(mut self, value: impl Into<String>) -> Self {
+        self.assert_cpu_pressure = Some(value.into());
+        self
+    }
+
+    pub fn assert_io_pressure(mut self, value: impl Into<String>) -> Self {
+        self.assert_io_pressure = Some(value.into());
+        self
     }
 }

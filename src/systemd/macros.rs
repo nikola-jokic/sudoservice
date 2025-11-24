@@ -10,13 +10,22 @@ macro_rules! write_option {
     };
 }
 
-/// Write an Option<Vec<String>> field with values space-separated on one line
+/// Write an Option<Vec<T>> field with values space-separated on one line, where T: Display
 #[macro_export]
 macro_rules! write_vec {
     ($buf:expr, $field:expr, $key:expr) => {
         if let Some(ref values) = $field {
             if !values.is_empty() {
-                writeln!($buf, "{}={}", $key, values.join(" "))?;
+                writeln!(
+                    $buf,
+                    "{}={}",
+                    $key,
+                    values
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                )?;
             }
         }
     };
