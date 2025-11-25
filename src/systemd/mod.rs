@@ -32,6 +32,37 @@ pub struct Config {
     pub install: Install,
 }
 
+impl Config {
+    pub fn new(name: impl Into<String>) -> Self {
+        Self {
+            name: name.into(),
+            unit: Unit::default(),
+            service: Service::default(),
+            install: Install::default(),
+        }
+    }
+
+    pub fn name(mut self, s: impl Into<String>) -> Self {
+        self.name = s.into();
+        self
+    }
+
+    pub fn unit(mut self, unit: Unit) -> Self {
+        self.unit = unit;
+        self
+    }
+
+    pub fn service(mut self, service: Service) -> Self {
+        self.service = service;
+        self
+    }
+
+    pub fn install(mut self, install: Install) -> Self {
+        self.install = install;
+        self
+    }
+}
+
 impl fmt::Display for Config {
     fn fmt(&self, buf: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.unit.fmt(buf)?;
@@ -62,17 +93,6 @@ impl Systemd {
     }
 }
 
-impl Systemd {
-    /// Creates a new `Systemd` service manager with the given configuration.
-    pub fn new(config: Config) -> Self {
-        Self { config }
-    }
-
-    fn config_path(&self) -> PathBuf {
-        PathBuf::from(format!("/etc/systemd/system/{}", self.config.unit_name()))
-    }
-}
-
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -86,6 +106,15 @@ impl fmt::Display for Status {
 }
 
 impl Systemd {
+    /// Creates a new `Systemd` service manager with the given configuration.
+    pub fn new(config: Config) -> Self {
+        Self { config }
+    }
+
+    fn config_path(&self) -> PathBuf {
+        PathBuf::from(format!("/etc/systemd/system/{}", self.config.unit_name()))
+    }
+
     pub fn install(&self) -> Result<()> {
         let dst = self.config_path();
         if dst.exists() {
