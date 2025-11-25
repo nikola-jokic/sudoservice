@@ -161,8 +161,6 @@ pub struct Exec {
 
 impl fmt::Display for Exec {
     fn fmt(&self, buf: &mut fmt::Formatter<'_>) -> fmt::Result {
-        buf.write_str("[Execution Environment]\n")?;
-
         // Path settings
         if let Some(ref path) = self.working_directory {
             writeln!(buf, "WorkingDirectory={}", path.display())?;
@@ -277,7 +275,10 @@ impl Exec {
         // Validate OOM score adjust (-1000 to 1000)
         if let Some(score) = self.oom_score_adjust {
             if score < -1000 || score > 1000 {
-                return Err(format!("OOMScoreAdjust {} must be between -1000 and 1000", score));
+                return Err(format!(
+                    "OOMScoreAdjust {} must be between -1000 and 1000",
+                    score
+                ));
             }
         }
 
@@ -285,11 +286,17 @@ impl Exec {
         if let Some(ref env_vars) = self.environment {
             for env_var in env_vars {
                 if !env_var.contains('=') {
-                    return Err(format!("Environment variable '{}' must be in KEY=VALUE format", env_var));
+                    return Err(format!(
+                        "Environment variable '{}' must be in KEY=VALUE format",
+                        env_var
+                    ));
                 }
                 let parts: Vec<&str> = env_var.splitn(2, '=').collect();
                 if parts.len() != 2 || parts[0].is_empty() {
-                    return Err(format!("Invalid environment variable format: '{}'", env_var));
+                    return Err(format!(
+                        "Invalid environment variable format: '{}'",
+                        env_var
+                    ));
                 }
             }
         }
@@ -298,7 +305,10 @@ impl Exec {
         if let Some(ref pass_vars) = self.pass_environment {
             for var in pass_vars {
                 if var.contains('=') {
-                    return Err(format!("PassEnvironment variable '{}' should not contain '='", var));
+                    return Err(format!(
+                        "PassEnvironment variable '{}' should not contain '='",
+                        var
+                    ));
                 }
             }
         }
@@ -307,7 +317,10 @@ impl Exec {
         if let Some(ref unset_vars) = self.unset_environment {
             for var in unset_vars {
                 if var.contains('=') {
-                    return Err(format!("UnsetEnvironment variable '{}' should not contain '='", var));
+                    return Err(format!(
+                        "UnsetEnvironment variable '{}' should not contain '='",
+                        var
+                    ));
                 }
             }
         }
