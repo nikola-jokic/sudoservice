@@ -1,4 +1,5 @@
 use std::fmt;
+use super::exec::Exec;
 use std::path::PathBuf;
 
 /// Service type for systemd services
@@ -349,6 +350,8 @@ pub struct Service {
     /// UNIX process signal to send when reloading the service.
     /// https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html#ReloadSignal=
     pub reload_signal: Option<String>,
+    
+    pub exec: Option<Exec>,
 }
 
 impl fmt::Display for Service {
@@ -674,6 +677,11 @@ impl Service {
 
     pub fn reload_signal(mut self, value: impl Into<String>) -> Self {
         self.reload_signal = Some(value.into());
+        self
+    }
+
+    pub fn exec(mut self, value: Exec) -> Self {
+        self.exec = Some(value);
         self
     }
 }
