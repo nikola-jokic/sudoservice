@@ -288,6 +288,27 @@ impl Systemd {
             _ => Ok(Status::NotInstalled),
         }
     }
+
+    pub fn logs(&self) -> Result<String> {
+        let output = match Command::new("journalctl")
+            .arg("-u")
+            .arg(self.config.unit_name())
+            .arg("--no-pager")
+            .output()?
+        {
+            output if output.status.success() => {
+                String::from_utf8_lossy(&output.stdout).to_string()
+            }
+            output => {
+                return Err(Error::CommandError(format!(
+                    "Failed to get service logs: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                )));
+            }
+        };
+
+        Ok(output)
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
