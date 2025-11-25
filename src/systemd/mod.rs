@@ -1,3 +1,4 @@
+use crate::Result;
 use crate::error::Error;
 use std::fmt;
 use std::fs::{self, File};
@@ -9,18 +10,18 @@ use which::which;
 
 #[macro_use]
 mod macros;
+pub mod exec;
 pub mod install;
 pub mod service;
 pub mod unit;
 
+pub use exec::Exec;
 pub use install::Install;
 pub use service::Service;
 pub use unit::Unit;
 
 const SYSTEMCTL: &str = "systemctl";
 const SERVICE_FILE_PERMISSIONS: u32 = 0o644;
-
-type Result<T> = std::result::Result<T, Error>;
 
 /// Configuration for a systemd service.
 /// This struct holds all necessary information to create and manage a systemd service.
@@ -60,6 +61,13 @@ impl Config {
     pub fn install(mut self, install: Install) -> Self {
         self.install = install;
         self
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        self.unit.validate().map_err(Error::ValidationError)?;
+        self.service.validate().map_err(Error::ValidationError)?;
+        self.install.validate().map_err(Error::ValidationError)?;
+        Ok(())
     }
 }
 
