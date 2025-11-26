@@ -1,6 +1,6 @@
 [package]
 name = "sudoservice"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 authors = ["Nikola Jokic <jokicnikola07@gmail.com>"]
 description = "Rust library interacting with service managers"
@@ -10,7 +10,7 @@ license = "MIT"
 
 [dependencies]
 which = "8"
-thiserror = "1"
+thiserror = "2"
 
 [features]
 systemd = []
